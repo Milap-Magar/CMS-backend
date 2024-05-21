@@ -1,7 +1,7 @@
 const db = require("../config/database");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
-const bcrypt = require("bcryptjs");
+// const bcrypt = require("bcryptjs");
 dotenv.config();
 
 exports.login = async (req, res) => {
@@ -30,12 +30,13 @@ exports.login = async (req, res) => {
       // }
 
       const token = jwt.sign(
-        { id: user.Sid, email: user.email },
+        { email: user.email, password: user.password },
         process.env.JWT_SECRET_KEY,
-        { expiresIn: "1h" }
+        { expiresIn: process.env.JWT_EXPIRES }
       );
       res.cookie("Token", token);
-      
+      console.log(`token ${token}`);
+
       return res.json({
         login: true,
         token: token,
