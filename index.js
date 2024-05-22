@@ -35,21 +35,22 @@ app.use("/user", require("./routes/user.routes"));
 
 app.get("/dashboard", verifyToken, async (req, res) => {
   const email = req.email;
-  // console.log("🚀 ~ app.get ~ email:", email)
+  console.log("🚀 ~ app.get ~ email:", email);
 
   try {
     const [results] = await db.query("SELECT * FROM students WHERE email = ?", [
       email,
     ]);
-    console.log("🚀 ~ app.get ~ [results]:", [results]);
+
+    console.log("🚀 ~ app.get ~ [results]:", results);
 
     if (results.length === 0) {
-      return res.status(404).json({ error: "User not found" });
+      return res.status(404).json({ error: "User not found" });``
     }
 
     const user = results[0];
 
-    console.log("🚀 ~ app.get ~ user:", user);
+    // console.log("🚀 ~ app.get ~ user:", user);
 
     res.json({
       name: user.name,
@@ -73,4 +74,4 @@ const PORT = process.env.PORT || 3306;
 app.listen(PORT, (req, res) => {
   console.log(`🚀 ~ Listening to Port no. ${PORT}`);
 });
-97
+97;
