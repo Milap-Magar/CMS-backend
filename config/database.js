@@ -1,24 +1,23 @@
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 const dotenv = require("dotenv");
+
 dotenv.config();
 
-const db = mysql.createConnection({
-  host: process.env.DATABASE_HOST,
-  user: process.env.DATABASE_USER,
-  password: process.env.DATABASE_PASSWORD,
-  database: process.env.DATABASE,
-});
+let dbPromise;
 
-db.connect((err) => {
-  if (err) {
-    console.error("🚀 ~ DATABASE ~ connection: ERROR", err);
-  } else {
+async function initializeDatabase() {
+  if (!dbPromise) {
+    dbPromise = mysql.createConnection({
+      host: process.env.DATABASE_HOST,
+      user: process.env.DATABASE_USER,
+      password: process.env.DATABASE_PASSWORD,
+      database: process.env.DATABASE,
+    });
+
     console.log("🚀 ~ DATABASE ~ Connected");
   }
-});
 
-db.on("error", (err) => {
-  console.error("🚀 ~ DATABASE ~ connection: ERROR", err);
-});
+  return dbPromise;
+}
 
-module.exports = db.promise(); // Export a promise-based connection
+module.exports = initializeDatabase;

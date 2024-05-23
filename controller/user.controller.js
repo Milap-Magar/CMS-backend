@@ -1,48 +1,62 @@
-const db = require("../config/database");
+const initializeDatabase = require("../config/database");
 const jwt = require("jsonwebtoken");
+// const bcrypt = require('bcrypt'); 
 const dotenv = require("dotenv");
-// const bcrypt = require("bcryptjs");
 dotenv.config();
 
-exports.login = async (req, res) => {
-  const email = req.body.email;
-  const password = req.body.password;
 
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password are required" });
+let db;
+
+const getDbConnection = async () => {
+  if (!db) {
+    db = await initializeDatabase();
   }
+  return db;
+};
 
-  const sql = "SELECT * FROM students WHERE email = ? AND password = ?";
-  db.query(sql, [email, password], async (err, data) => {
-    if (err) {
-      return res.status(500).json({ error: "Internal Server Error" });
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password are required" });
     }
-    console.log("Query result:", data);
 
-    if (data.length === 0) {
+    const sql = "SELECT * FROM students WHERE email = ? AND password = ?";
+    const db = await getDbConnection();
+    const [rows] = await db.execute(sql, [email, password]);
+
+    console.log("Query result:", rows);
+
+    if (rows.length === 0) {
       return res.status(401).json({ error: "Invalid email or password" });
     } else {
-      const user = data[0];
+      const user = rows[0];
 
+      // Uncomment if using bcrypt for password hashing
       // const isPasswordValid = await bcrypt.compare(password, user.password);
       // if (!isPasswordValid) {
-      //   return res.status(401).json({ error: "Password bcryption error" });
+      //   return res.status(401).json({ error: "Invalid password" });
       // }
 
       const token = jwt.sign(
-        { email: user.email, password: user.password },
+        { email: user.email },
         process.env.JWT_SECRET_KEY,
         { expiresIn: process.env.JWT_EXPIRES }
       );
-      res.cookie("Token", token);
-      console.log(`token ${token}`);
+      res.cookie("Token", token, { httpOnly: true });
+
+      console.log(`Generated token: ${token}`);
 
       return res.json({
         login: true,
         token: token,
       });
     }
-  });
+  } catch (error) {
+    console.error("🚀 ~ Login error:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 exports.register = async (req, res) => {

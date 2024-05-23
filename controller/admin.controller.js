@@ -1,4 +1,4 @@
-const db = require("../config/database");
+const dbPromise = require("../config/database");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
@@ -11,16 +11,9 @@ exports.login = async (req, res) => {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
-  const sql = "SELECT * FROM admins WHERE email = ?";
-  const values = [email];
-
-  db.query(sql, values, async (err, data) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ error: "Internal Server Error" });
-    }
-
-    console.log("Query result:", data);
+  try {
+    const db = await dbPromise();
+    const [data] = await db.execute("SELECT * FROM admins WHERE email = ?", [email]);
 
     if (data.length === 0) {
       return res.status(401).json({ error: "Invalid email or password" });
@@ -44,7 +37,10 @@ exports.login = async (req, res) => {
       login: true,
       token: token,
     });
-  });
+  } catch (err) {
+    console.error("Database error:", err);
+    return res.status(500).json({ error: "Internal Server Error" });
+  }
 };
 
 exports.register = async (req, res) => {
@@ -55,30 +51,24 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const checkEmailSql = "SELECT * FROM admins WHERE `email` = ?";
-    db.query(checkEmailSql, [email], (err, data) => {
-      if (err) {
-        console.error("Database error during email check:", err);
-        return res.status(500).json({ error: "Internal Server Error" });
-      }
+    const db = await dbPromise();
 
-      if (data.length > 0) {
-        return res.status(400).json({ error: "Email already registered" });
-      }
+    // Check if the email is already registered
+    const [data] = await db.execute("SELECT * FROM admins WHERE email = ?", [email]);
+    if (data.length > 0) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
 
-      const insertSql =
-        "INSERT INTO admins (`email`, `password`, `name`, `phone`, `address`) VALUES (?, ?, ?, ?, ?)";
-      const values = [email, password, name, phone, address];
+    // Hash the password before storing it
+    const hashedPassword = await bcrypt.hash(password, 10);
 
-      db.query(insertSql, values, (err, result) => {
-        if (err) {
-          console.error("Database error during insert:", err);
-          return res.status(500).json({ error: "Internal Server Error" });
-        }
+    // Insert the new admin
+    const [result] = await db.execute(
+      "INSERT INTO admins (email, password, name, phone, address) VALUES (?, ?, ?, ?, ?)",
+      [email, hashedPassword, name, phone, address]
+    );
 
-        return res.json({ success: true, data: result });
-      });
-    });
+    return res.json({ success: true, data: result });
   } catch (error) {
     console.error("Error handling request:", error);
     return res.status(500).json({ error: "Internal Server Error" });
