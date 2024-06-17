@@ -4,7 +4,7 @@ dotenv.config();
 
 const verifyToken = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  console.log("🚀 ~ verifyToken ~ authHeader:", authHeader);
+  // console.log("🚀 ~ verifyToken ~ authHeader:", authHeader);
 
   if (!authHeader) {
     return res.status(401).json({ error: "Unauthorized: No token provided" });

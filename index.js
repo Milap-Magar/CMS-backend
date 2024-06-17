@@ -25,15 +25,16 @@ app.use("/user", require("./routes/user.routes"));
 
 app.get("/dashboard", verifyToken, async (req, res) => {
   const email = req.email;
-  console.log("🚀 ~ app.get ~ email:", email);
+  // console.log("🚀 ~ app.get ~ email:", email);
 
   try {
     const db = await initializeDatabase();
-    const [results] = await db.execute("SELECT * FROM students WHERE email = ?", [
-      email,
-    ]);
+    const [results] = await db.execute(
+      "SELECT * FROM students WHERE email = ?",
+      [email]
+    );
 
-    console.log("🚀 ~ app.get ~ [results]:", results);
+    // console.log("🚀 ~ app.get ~ [results]:", results);
 
     if (results.length === 0) {
       return res.status(404).json({ error: "User not found" });

@@ -1,6 +1,5 @@
 const initializeDatabase = require("../config/database");
 const jwt = require("jsonwebtoken");
-// const bcrypt = require('bcrypt'); 
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -46,7 +45,7 @@ exports.login = async (req, res) => {
       );
       res.cookie("Token", token, { httpOnly: true });
 
-      console.log(`Generated token: ${token}`);
+      // console.log(`Generated token: ${token}`);
 
       return res.json({
         login: true,
