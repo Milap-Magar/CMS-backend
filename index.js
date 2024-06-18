@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const initializeDatabase = require("./config/database");
+const db = require("./config/database");
 const cookieParser = require("cookie-parser");
 const verifyToken = require("./middleware/user.middleware");
 
@@ -23,12 +23,13 @@ app.use(
 app.use("/admin", require("./routes/admin.routes"));
 app.use("/user", require("./routes/user.routes"));
 
+app.use("/", require("./routes/complain.routes"));
+
 app.get("/dashboard", verifyToken, async (req, res) => {
   const email = req.email;
   // console.log("🚀 ~ app.get ~ email:", email);
 
   try {
-    const db = await initializeDatabase();
     const [results] = await db.execute(
       "SELECT * FROM students WHERE email = ?",
       [email]

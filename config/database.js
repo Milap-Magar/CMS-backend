@@ -3,21 +3,17 @@ const dotenv = require("dotenv");
 
 dotenv.config();
 
-let dbPromise;
+// Create a connection pool
+const pool = mysql.createPool({
+  host: process.env.DATABASE_HOST,
+  user: process.env.DATABASE_USER,
+  password: process.env.DATABASE_PASSWORD,
+  database: process.env.DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+});
 
-async function initializeDatabase() {
-  if (!dbPromise) {
-    dbPromise = mysql.createConnection({
-      host: process.env.DATABASE_HOST,
-      user: process.env.DATABASE_USER,
-      password: process.env.DATABASE_PASSWORD,
-      database: process.env.DATABASE,
-    });
+console.log("🚀 ~ DATABASE ~ Connected");
 
-    console.log("🚀 ~ DATABASE ~ Connected");
-  }
-
-  return dbPromise;
-}
-
-module.exports = initializeDatabase;
+module.exports = pool;

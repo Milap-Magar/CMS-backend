@@ -1,17 +1,7 @@
-const initializeDatabase = require("../config/database");
+const db = require("../config/database");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
-
-
-let db;
-
-const getDbConnection = async () => {
-  if (!db) {
-    db = await initializeDatabase();
-  }
-  return db;
-};
 
 exports.login = async (req, res) => {
   try {
@@ -22,7 +12,6 @@ exports.login = async (req, res) => {
     }
 
     const sql = "SELECT * FROM students WHERE email = ? AND password = ?";
-    const db = await getDbConnection();
     const [rows] = await db.execute(sql, [email, password]);
 
     console.log("Query result:", rows);

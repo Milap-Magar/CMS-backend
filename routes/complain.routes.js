@@ -6,12 +6,16 @@ const {
   deleteComplaint,
   updateComplaint,
   addComplains,
-  getComplaint,
+  // getComplaint,
 } = require("../controller/complain.controller");
 
 router.post("/complaints", checkAuth, addComplains);
 
 router.get("/complaints", checkAuth, getComplaints);
+
+
+
+// api checking left from here
 
 router.put("/complaints", checkAuth, updateComplaint);
 

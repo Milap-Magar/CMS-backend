@@ -1,6 +1,3 @@
-const express = require("express");
-const router = express.Router();
-
 const db = require("../config/database");
 
 exports.addComplains = async (req, res) => {
@@ -8,63 +5,31 @@ exports.addComplains = async (req, res) => {
   const email = req.user.email;
 
   try {
-    const result = await db.query(
+    const result = await db.execute(
       `INSERT INTO complaints (email, title, description, faculty, semester, status, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
       [email, title, description, faculty, semester, status || "pending"]
     );
-    res.status(201).json({ success: true, complaintId: result.insertId });
+    return res
+      .status(200)
+      .json({ success: true, complaintId: result.complaintId });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
 
-exprots.getComplaints = async (req, res) => {
-  const userId = req.user.id;
-  const role = req.user.role;
-  let query = "SELECT * FROM complaints";
-  let queryParams = [];
-
-  if (role === "student") {
-    query += " WHERE email = ?";
-    queryParams.push(req.user.email);
-  } else if (role === "admin" && req.query.email) {
-    query += " WHERE email = ?";
-    queryParams.push(req.query.email);
-  }
+exports.getComplaints = async (req, res) => {
+  let query = "SELECT * FROM complaints WHERE email = ?";
+  let queryParams = [req.user.email];
 
   try {
-    const complaints = await db.query(query, queryParams);
-    res.status(200).json({ success: true, complaints });
+    const [rows, fields] = await db.query(query, queryParams);
+    // console.log("🚀 ~ exports.getComplaints= ~ rows:", rows);
+
+    return res.status(200).json({ success: true, complaints: rows });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
-  }
-};
-
-exports.getComplaint = async (req, res) => {
-  const complaintId = req.params.id;
-  const email = req.user.email;
-  const role = req.user.role;
-
-  try {
-    const [complaint] = await db.query(
-      "SELECT * FROM complaints WHERE complain_id = ?",
-      [complaintId]
-    );
-
-    if (!complaint) {
-      return res
-        .status(404)
-        .json({ success: false, error: "Complaint not found" });
-    }
-
-    if (role === "student" && complaint.email !== email) {
-      return res.status(403).json({ success: false, error: "Access denied" });
-    }
-
-    res.status(200).json({ success: true, complaint });
-  } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Error fetching complaints:", err);
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
 
@@ -153,10 +118,39 @@ exports.deleteComplaint = async (req, res) => {
       complaintId,
     ]);
 
-    res.status(200).json({ success: true, message: "Complaint deleted" });
+    return res
+      .status(200)
+      .json({ success: true, message: "Complaint deleted" });
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    return res.status(500).json({ success: false, error: err.message });
   }
 };
 
-module.exports = router;
+exports.getComplaint = async (req, res) => {
+  const complaintId = req.params.id;
+  const email = req.user.email;
+  const role = req.user.role;
+
+  try {
+    const [complaint] = await db.query(
+      "SELECT * FROM complaints WHERE complain_id = ?",
+      [complaintId]
+    );
+
+    if (!complaint) {
+      return res
+        .status(404)
+        .json({ success: false, error: "Complaint not found" });
+    }
+
+    if (role === "student" && complaint.email !== email) {
+      return res.status(403).json({ success: false, error: "Access denied" });
+    }
+
+    return res.status(200).json({ success: true, complaint });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// module.exports = router;
