@@ -1,10 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const db = require("../config/database");
-const checkAuth = require("./authMiddleware"); // Adjust the path as needed
 
-// Create a new complaint
-router.post("/complaints", checkAuth, async (req, res) => {
+const db = require("../config/database");
+
+exports.addComplains = async (req, res) => {
   const { title, description, faculty, semester, status } = req.body;
   const email = req.user.email;
 
@@ -18,10 +17,9 @@ router.post("/complaints", checkAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
 
-// Get all complaints (students see their own, admin sees all or filtered by user)
-router.get("/complaints", checkAuth, async (req, res) => {
+exprots.getComplaints = async (req, res) => {
   const userId = req.user.id;
   const role = req.user.role;
   let query = "SELECT * FROM complaints";
@@ -41,19 +39,23 @@ router.get("/complaints", checkAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
 
-// Get a single complaint by ID
-router.get("/complaints/:id", checkAuth, async (req, res) => {
+exports.getComplaint = async (req, res) => {
   const complaintId = req.params.id;
   const email = req.user.email;
   const role = req.user.role;
 
   try {
-    const [complaint] = await db.query("SELECT * FROM complaints WHERE complain_id = ?", [complaintId]);
+    const [complaint] = await db.query(
+      "SELECT * FROM complaints WHERE complain_id = ?",
+      [complaintId]
+    );
 
     if (!complaint) {
-      return res.status(404).json({ success: false, error: "Complaint not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Complaint not found" });
     }
 
     if (role === "student" && complaint.email !== email) {
@@ -64,20 +66,24 @@ router.get("/complaints/:id", checkAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
 
-// Update a complaint
-router.put("/complaints/:id", checkAuth, async (req, res) => {
+exports.updateComplaint = async (req, res) => {
   const complaintId = req.params.id;
   const { title, description, status } = req.body;
   const email = req.user.email;
   const role = req.user.role;
 
   try {
-    const [complaint] = await db.query("SELECT * FROM complaints WHERE complain_id = ?", [complaintId]);
+    const [complaint] = await db.query(
+      "SELECT * FROM complaints WHERE complain_id = ?",
+      [complaintId]
+    );
 
     if (!complaint) {
-      return res.status(404).json({ success: false, error: "Complaint not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Complaint not found" });
     }
 
     if (role === "student" && complaint.email !== email) {
@@ -107,7 +113,9 @@ router.put("/complaints/:id", checkAuth, async (req, res) => {
       updateValues.push(complaintId);
 
       await db.query(
-        `UPDATE complaints SET ${updateFields.join(", ")} WHERE complain_id = ?`,
+        `UPDATE complaints SET ${updateFields.join(
+          ", "
+        )} WHERE complain_id = ?`,
         updateValues
       );
 
@@ -118,31 +126,37 @@ router.put("/complaints/:id", checkAuth, async (req, res) => {
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
 
-// Delete a complaint
-router.delete("/complaints/:id", checkAuth, async (req, res) => {
+exports.deleteComplaint = async (req, res) => {
   const complaintId = req.params.id;
   const email = req.user.email;
   const role = req.user.role;
 
   try {
-    const [complaint] = await db.query("SELECT * FROM complaints WHERE complain_id = ?", [complaintId]);
+    const [complaint] = await db.query(
+      "SELECT * FROM complaints WHERE complain_id = ?",
+      [complaintId]
+    );
 
     if (!complaint) {
-      return res.status(404).json({ success: false, error: "Complaint not found" });
+      return res
+        .status(404)
+        .json({ success: false, error: "Complaint not found" });
     }
 
     if (role === "student" && complaint.email !== email) {
       return res.status(403).json({ success: false, error: "Access denied" });
     }
 
-    await db.query("DELETE FROM complaints WHERE complain_id = ?", [complaintId]);
+    await db.query("DELETE FROM complaints WHERE complain_id = ?", [
+      complaintId,
+    ]);
 
     res.status(200).json({ success: true, message: "Complaint deleted" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
-});
+};
 
 module.exports = router;
