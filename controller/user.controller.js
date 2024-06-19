@@ -49,17 +49,8 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      address,
-      symbol,
-      semester,
-      program,
-      role,
-    } = req.body;
+    const { name, email, password, phone, address, symbol, semester, program } =
+      req.body;
     // console.log("here is the email", email);
 
     if (
@@ -70,8 +61,7 @@ exports.register = async (req, res) => {
       !address ||
       !symbol ||
       !program ||
-      !semester ||
-      !role
+      !semester
     ) {
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -88,7 +78,7 @@ exports.register = async (req, res) => {
       }
 
       const insertSql =
-        "INSERT INTO students (`name`, `email`, `password`, `phone`, `address`, `symbol`, `program`, `semester`, `role`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO students (`name`, `email`, `password`, `phone`, `address`, `symbol`, `program`, `semester`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
       const values = [
         name,
         email,
@@ -98,7 +88,6 @@ exports.register = async (req, res) => {
         symbol,
         program,
         semester,
-        role,
       ];
 
       db.query(insertSql, values, (err, result) => {
@@ -112,5 +101,40 @@ exports.register = async (req, res) => {
   } catch (error) {
     console.error("Error handling request:", error);
     return res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+  
+exports.dashboard = async (req, res) => {
+  const email = req.email;
+  // console.log("🚀 ~ app.get ~ email:", email);
+
+  try {
+    const [results] = await db.execute(
+      "SELECT * FROM students WHERE email = ?",
+      [email]
+    );
+
+    // console.log("🚀 ~ app.get ~ [results]:", results);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const user = results[0];
+
+    res.json({
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      symbol: user.symbol,
+      semester: user.semester,
+      program: user.program,
+      role: user.role,
+      message: "This is your dashboard data.",
+    });
+  } catch (error) {
+    console.error("Database query error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };

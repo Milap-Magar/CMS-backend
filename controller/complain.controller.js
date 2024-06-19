@@ -1,14 +1,23 @@
 const db = require("../config/database");
 
 exports.addComplains = async (req, res) => {
-  const { title, description, faculty, semester, status } = req.body;
+  const { title, description, category, student_id, complain_to, status } =
+    req.body;
   const email = req.user.email;
 
   try {
     const result = await db.execute(
-      `INSERT INTO complaints (email, title, description, faculty, semester, status, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-      [email, title, description, faculty, semester, status || "pending"]
+      `INSERT INTO complaints (email, title, description, category,	student_id, complain_to, status, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+      [
+        email,
+        title,
+        description,
+        category,
+        student_id,
+        complain_to,
+        status || "pending",
+      ]
     );
     return res
       .status(200)
