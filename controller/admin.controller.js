@@ -28,11 +28,11 @@ exports.login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id: admin.admin_Id, email: admin.email },
+      { id: admin.admin_Id, email: admin.email, role: admin.role },
       process.env.JWT_SECRET_KEY,
       { expiresIn: "1h" }
     );
-
+    
     return res.json({
       login: true,
       token: token,
@@ -71,7 +71,6 @@ exports.register = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
-
 
 //GET DATA from admins
 exports.dashboard = async (req, res) => {
