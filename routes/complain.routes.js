@@ -6,21 +6,22 @@ const {
   deleteComplaint,
   updateComplaint,
   addComplains,
-  // getComplaint,
+  getComplaint,
 } = require("../controller/complain.controller");
 
+// Create a new complaint
 router.post("/complaints", checkAuth, addComplains);
 
+// Get all complaints for the logged-in user
 router.get("/complaints", checkAuth, getComplaints);
 
+// Get a specific complaint by ID
+router.get("/complaints/:id", checkAuth, getComplaint);
 
+// Update a specific complaint by ID
+router.put("/complaints/:id", checkAuth, updateComplaint);
 
-// api checking left from here
-
-router.put("/complaints", checkAuth, updateComplaint);
-
-router.delete("/complaints", checkAuth, deleteComplaint);
-
-// router.get("/complaints/:id", checkAuth, getComplaint);
+// Delete a specific complaint by ID
+router.delete("/complaints/:id", checkAuth, deleteComplaint);
 
 module.exports = router;
