@@ -49,17 +49,28 @@ exports.login = async (req, res) => {
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, password, phone, address, symbol, semester, program } =
-      req.body;
+    const {
+      name,
+      DOB,
+      symbol,
+      email,
+      password,
+      phone,
+      address,
+      semester,
+      program,
+    } = req.body;
+    
     // console.log("here is the email", email);
 
     if (
       !name ||
+      !DOB ||
+      !symbol ||
       !email ||
       !password ||
       !phone ||
       !address ||
-      !symbol ||
       !program ||
       !semester
     ) {
@@ -78,14 +89,15 @@ exports.register = async (req, res) => {
       }
 
       const insertSql =
-        "INSERT INTO students (`name`, `email`, `password`, `phone`, `address`, `symbol`, `program`, `semester`) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO students (`name`,`DOB,`symbol`, `email`, `password`, `phone`, `address`, `program`, `semester`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
       const values = [
         name,
+        DOB,
+        symbol,
         email,
         password,
         phone,
         address,
-        symbol,
         program,
         semester,
       ];
@@ -103,7 +115,7 @@ exports.register = async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
-  
+
 exports.dashboard = async (req, res) => {
   const email = req.email;
   // console.log("🚀 ~ app.get ~ email:", email);
@@ -124,13 +136,13 @@ exports.dashboard = async (req, res) => {
 
     res.json({
       name: user.name,
+      DOB: user.DOB,
+      symbol: user.symbol,
       email: user.email,
       phone: user.phone,
       address: user.address,
-      symbol: user.symbol,
       semester: user.semester,
       program: user.program,
-      role: user.role,
       message: "This is your dashboard data.",
     });
   } catch (error) {
