@@ -59,8 +59,9 @@ exports.register = async (req, res) => {
       address,
       semester,
       program,
+      role,
     } = req.body;
-    
+
     // console.log("here is the email", email);
 
     if (
@@ -72,7 +73,8 @@ exports.register = async (req, res) => {
       !phone ||
       !address ||
       !program ||
-      !semester
+      !semester ||
+      !role
     ) {
       return res.status(400).json({ error: "All fields are required" });
     }
@@ -89,7 +91,7 @@ exports.register = async (req, res) => {
       }
 
       const insertSql =
-        "INSERT INTO students (`name`,`DOB,`symbol`, `email`, `password`, `phone`, `address`, `program`, `semester`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "INSERT INTO students (`name`,`DOB,`symbol`, `email`, `password`, `phone`, `address`, `program`, `semester`, `role`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, `student`)";
       const values = [
         name,
         DOB,
@@ -100,6 +102,7 @@ exports.register = async (req, res) => {
         address,
         program,
         semester,
+        role,
       ];
 
       db.query(insertSql, values, (err, result) => {
