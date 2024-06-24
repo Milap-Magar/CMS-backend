@@ -24,7 +24,7 @@ app.use("/user", require("./routes/user.routes"));
 
 app.use("/", require("./routes/complain.routes"));
 
-
+app.use("/handle", require("./routes/admin.complain.routes"));
 
 const PORT = process.env.PORT || 3306;
 

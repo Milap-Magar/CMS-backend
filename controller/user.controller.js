@@ -1,5 +1,7 @@
 const db = require("../config/database");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
 const dotenv = require("dotenv");
 dotenv.config();
 
@@ -47,6 +49,7 @@ exports.login = async (req, res) => {
   }
 };
 
+//ISSUE HERE
 exports.register = async (req, res) => {
   try {
     const {
@@ -57,12 +60,10 @@ exports.register = async (req, res) => {
       password,
       phone,
       address,
-      semester,
       program,
+      semester,
       role,
     } = req.body;
-
-    // console.log("here is the email", email);
 
     if (
       !name ||
@@ -76,42 +77,57 @@ exports.register = async (req, res) => {
       !semester ||
       !role
     ) {
+      console.log("Missing fields in request");
       return res.status(400).json({ error: "All fields are required" });
     }
 
-    const checkEmailSql = "SELECT * FROM students WHERE `email` = ?";
-    db.query(checkEmailSql, email, (err, data) => {
+    const checkEmailSql = "SELECT * FROM students WHERE email = ?";
+    db.query(checkEmailSql, [email], async (err, data) => {
       if (err) {
         console.error("Database error during email check:", err);
         return res.status(500).json({ error: "Internal Server Error" });
       }
 
       if (data.length > 0) {
+        console.log("Email already registered:", email);
         return res.status(400).json({ error: "Email already registered" });
       }
+      try {
+        const hashedPassword = await bcrypt.hash(password, 12);
+        console.log("🚀 ~ db.query ~ hashedPassword:", hashedPassword);
 
-      const insertSql =
-        "INSERT INTO students (`name`,`DOB,`symbol`, `email`, `password`, `phone`, `address`, `program`, `semester`, `role`) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, `student`)";
-      const values = [
-        name,
-        DOB,
-        symbol,
-        email,
-        password,
-        phone,
-        address,
-        program,
-        semester,
-        role,
-      ];
-
-      db.query(insertSql, values, (err, result) => {
-        if (err) {
-          console.error("Database error during insert:", err);
-          return res.status(500).json({ error: "Internal Server Error here" });
-        }
-        return res.status(200).json({ success: true, data: result });
-      });
+        const insertSql = `
+          INSERT INTO students (
+            name, DOB, symbol, email, password, phone, address, 
+            program, semester, role, created_at, approved_by
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL)
+        `;
+        console.log("🚀 ~ db.query ~ insertSql:", insertSql);
+        const values = [
+          name,
+          DOB,
+          symbol,
+          email,
+          hashedPassword,
+          phone,
+          address,
+          program,
+          semester,
+          role,
+        ];
+        console.log(values);
+        db.query(insertSql, values, (err, result) => {
+          if (err) {
+            console.error("Database error during insert:", err);
+            return res.status(500).json({ error: "Internal Server Error" });
+          }
+          console.log("Inserted student:", result);
+          return res.status(200).json({ success: true, data: result });
+        });
+      } catch (error) {
+        console.error("Error hashing password:", error);
+        return res.status(500).json({ error: "Internal Server Error" });
+      }
     });
   } catch (error) {
     console.error("Error handling request:", error);
@@ -121,16 +137,11 @@ exports.register = async (req, res) => {
 
 exports.dashboard = async (req, res) => {
   const email = req.email;
-  // console.log("🚀 ~ app.get ~ email:", email);
-
   try {
     const [results] = await db.execute(
       "SELECT * FROM students WHERE email = ?",
       [email]
     );
-
-    // console.log("🚀 ~ app.get ~ [results]:", results);
-
     if (results.length === 0) {
       return res.status(404).json({ error: "User not found" });
     }
@@ -138,6 +149,7 @@ exports.dashboard = async (req, res) => {
     const user = results[0];
 
     res.json({
+      sid: user.Sid,
       name: user.name,
       DOB: user.DOB,
       symbol: user.symbol,
