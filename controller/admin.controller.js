@@ -72,7 +72,6 @@ exports.register = async (req, res) => {
   }
 };
 
-//GET DATA from admins
 exports.dashboard = async (req, res) => {
   const email = req.email;
   // console.log("🚀 ~ app.get ~ email:", email);

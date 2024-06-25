@@ -23,7 +23,7 @@ exports.addComplains = async (req, res) => {
 
     const complaintId = result.insertId;
 
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       message: "Complaint added successfully",
       complaintId: complaintId,

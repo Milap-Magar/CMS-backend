@@ -1,6 +1,6 @@
 const db = require("../config/database");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -51,6 +51,8 @@ exports.login = async (req, res) => {
 
 //ISSUE HERE
 exports.register = async (req, res) => {
+  console.log("🚀 ~ exports.register= ~ req:", req.body);
+
   try {
     const {
       name,
@@ -80,28 +82,23 @@ exports.register = async (req, res) => {
       console.log("Missing fields in request");
       return res.status(400).json({ error: "All fields are required" });
     }
-
+    console.log("1");
     const checkEmailSql = "SELECT * FROM students WHERE email = ?";
-    db.query(checkEmailSql, [email], async (err, data) => {
-      if (err) {
-        console.error("Database error during email check:", err);
-        return res.status(500).json({ error: "Internal Server Error" });
-      }
+    const [data] = await db.execute(checkEmailSql, [email]);
+    console.log("🚀 ~ exports.register= ~ data:", data.length);
 
-      if (data.length > 0) {
-        console.log("Email already registered:", email);
-        return res.status(400).json({ error: "Email already registered" });
-      }
+    if (data.length === 0) {
       try {
-        const hashedPassword = await bcrypt.hash(password, 12);
+        console.log("2");
+        const hashedPassword = await bcrypt.hash(password, 10);
         console.log("🚀 ~ db.query ~ hashedPassword:", hashedPassword);
 
         const insertSql = `
-          INSERT INTO students (
-            name, DOB, symbol, email, password, phone, address, 
-            program, semester, role, created_at, approved_by
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL)
-        `;
+            INSERT INTO students (
+              name, DOB, symbol, email, password, phone, address, 
+              program, semester, role, created_at, approved_by
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL)
+          `;
         console.log("🚀 ~ db.query ~ insertSql:", insertSql);
         const values = [
           name,
@@ -116,19 +113,17 @@ exports.register = async (req, res) => {
           role,
         ];
         console.log(values);
-        db.query(insertSql, values, (err, result) => {
-          if (err) {
-            console.error("Database error during insert:", err);
-            return res.status(500).json({ error: "Internal Server Error" });
-          }
-          console.log("Inserted student:", result);
-          return res.status(200).json({ success: true, data: result });
-        });
+        const [result] = await db.execute(insertSql, values);
+        return res
+          .status(200)
+          .json({ message: "Inserted sucessfully", data: [result] });
       } catch (error) {
         console.error("Error hashing password:", error);
         return res.status(500).json({ error: "Internal Server Error" });
       }
-    });
+    } else {
+      return res.status(400).json({ error: "Email already registered." });
+    }
   } catch (error) {
     console.error("Error handling request:", error);
     return res.status(500).json({ error: "Internal Server Error" });
