@@ -11,11 +11,11 @@ const verifyToken = (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
-  console.log("🚀 ~ verifyToken ~ token:", token);
+  // console.log("🚀 ~ verifyToken ~ token:", token);
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    console.log("Decoded token:", decoded);
+    // console.log("Decoded token:", decoded);
     req.email = decoded.email;
     next();
   } catch (error) {

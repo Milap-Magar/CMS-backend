@@ -6,50 +6,44 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 exports.login = async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
   try {
-    const { email, password } = req.body;
+    const [data] = await db.execute("SELECT * FROM students WHERE email = ?", [
+      email,
+    ]);
 
-    if (!email || !password) {
-      return res.status(400).json({ error: "Email and password are required" });
-    }
-
-    const sql = "SELECT * FROM students WHERE email = ? AND password = ?";
-    const [rows] = await db.execute(sql, [email, password]);
-
-    console.log("Query result:", rows);
-
-    if (rows.length === 0) {
+    if (data.length === 0) {
       return res.status(401).json({ error: "Invalid email or password" });
-    } else {
-      const user = rows[0];
-
-      // Uncomment if using bcrypt for password hashing
-      // const isPasswordValid = await bcrypt.compare(password, user.password);
-      // if (!isPasswordValid) {
-      //   return res.status(401).json({ error: "Invalid password" });
-      // }
-
-      const token = jwt.sign(
-        { email: user.email },
-        process.env.JWT_SECRET_KEY,
-        { expiresIn: process.env.JWT_EXPIRES }
-      );
-      res.cookie("Token", token, { httpOnly: true });
-
-      // console.log(`Generated token: ${token}`);
-
-      return res.json({
-        login: true,
-        token: token,
-      });
     }
-  } catch (error) {
-    console.error("🚀 ~ Login error:", error);
+
+    const user = data[0];
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const token = jwt.sign(
+      { id: user.Sid, email: user.email, role: user.role },
+      process.env.JWT_SECRET_KEY,
+      { expiresIn: "1h" }
+    );
+
+    return res.json({
+      login: true,
+      token: token,
+    });
+  } catch (err) {
+    console.error("Database error:", err);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
-//ISSUE HERE
 exports.register = async (req, res) => {
   console.log("🚀 ~ exports.register= ~ req:", req.body);
 
@@ -82,14 +76,12 @@ exports.register = async (req, res) => {
       console.log("Missing fields in request");
       return res.status(400).json({ error: "All fields are required" });
     }
-    console.log("1");
     const checkEmailSql = "SELECT * FROM students WHERE email = ?";
     const [data] = await db.execute(checkEmailSql, [email]);
     console.log("🚀 ~ exports.register= ~ data:", data.length);
 
     if (data.length === 0) {
       try {
-        console.log("2");
         const hashedPassword = await bcrypt.hash(password, 10);
         console.log("🚀 ~ db.query ~ hashedPassword:", hashedPassword);
 

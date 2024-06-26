@@ -1,7 +1,8 @@
 const db = require("../config/database");
 const jwt = require("jsonwebtoken");
-const dotenv = require("dotenv");
 const bcrypt = require("bcryptjs");
+
+const dotenv = require("dotenv");
 dotenv.config();
 
 exports.login = async (req, res) => {
@@ -32,7 +33,7 @@ exports.login = async (req, res) => {
       process.env.JWT_SECRET_KEY,
       { expiresIn: "1h" }
     );
-    
+
     return res.json({
       login: true,
       token: token,
@@ -94,6 +95,25 @@ exports.dashboard = async (req, res) => {
       address: admin.address,
       role: admin.role,
       message: "This is your dashboard data.",
+    });
+  } catch (error) {
+    console.error("Database query error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.total = async (req, res) => {
+  try {
+    const [results] = await db.execute("SELECT * FROM students");
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+    // const user = results[0];
+    // console.log("🚀 ~ exports.total= ~ user:", user);
+
+    res.json({
+      success: true,
+      totals: results,
     });
   } catch (error) {
     console.error("Database query error:", error);
