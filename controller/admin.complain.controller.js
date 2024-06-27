@@ -5,7 +5,7 @@ exports.getComplaints = async (req, res) => {
   const email = req.user.email;
 
   try {
-    const [rows] = await db.query("SELECT * FROM complaints");
+    const [rows] = await db.execute("SELECT * FROM complaints");
     // console.log(rows);
 
     return res.status(200).json({
@@ -23,14 +23,15 @@ exports.getComplaints = async (req, res) => {
 };
 // Update a complaint [UPDATE]
 exports.updateComplaint = async (req, res) => {
+  // console.log(req.params);
   const complaintId = req.params.id;
-  const { title, description, status } = req.body;
-  const email = req.user.email;
-  const role = req.user.role;
+  // console.log("🚀 ~ exports.updateComplaint= ~ complaintId:", complaintId);
+
+  const { status } = req.body;
 
   try {
-    const [complaint] = await db.query(
-      "SELECT * FROM complaints WHERE complain_id = ?",
+    const [complaint] = await db.execute(
+      "SELECT * FROM complaints WHERE complaint_id = ?",
       [complaintId]
     );
 
@@ -41,40 +42,10 @@ exports.updateComplaint = async (req, res) => {
       });
     }
 
-    if (role === "student" && complaint[0].email !== email) {
-      return res.status(403).json({
-        success: false,
-        message: "Access denied",
-      });
-    }
-
-    const updateFields = [];
-    const updateValues = [];
-
-    if (title) {
-      updateFields.push("title = ?");
-      updateValues.push(title);
-    }
-
-    if (description) {
-      updateFields.push("description = ?");
-      updateValues.push(description);
-    }
-
-    if (role === "admin" && status) {
-      updateFields.push("status = ?");
-      updateValues.push(status);
-    }
-
-    if (updateFields.length > 0) {
-      updateFields.push("updated_at = NOW()");
-      updateValues.push(complaintId);
-
-      await db.query(
-        `UPDATE complaints SET ${updateFields.join(
-          ", "
-        )} WHERE complain_id = ?`,
-        updateValues
+    if (status) {
+      await db.execute(
+        "UPDATE complaints SET status = ?, updated_at = NOW() WHERE complaint_id = ?",
+        [status, complaintId]
       );
 
       return res.status(200).json({
@@ -84,7 +55,7 @@ exports.updateComplaint = async (req, res) => {
     } else {
       return res.status(400).json({
         success: false,
-        message: "No fields to update",
+        message: "No status provided for update",
       });
     }
   } catch (err) {
@@ -103,8 +74,8 @@ exports.deleteComplaint = async (req, res) => {
   const role = req.user.role;
 
   try {
-    const [complaint] = await db.query(
-      "SELECT * FROM complaints WHERE complain_id = ?",
+    const [complaint] = await db.execute(
+      "SELECT * FROM complaints WHERE complaint_id = ?",
       [complaintId]
     );
 
@@ -123,7 +94,7 @@ exports.deleteComplaint = async (req, res) => {
       });
     }
 
-    await db.query("DELETE FROM complaints WHERE complain_id = ?", [
+    await db.execute("DELETE FROM complaints WHERE complaint_id = ?", [
       complaintId,
     ]);
 
@@ -147,8 +118,8 @@ exports.getComplaint = async (req, res) => {
   const role = req.user.role;
 
   try {
-    const [complaint] = await db.query(
-      "SELECT * FROM complaints WHERE complain_id = ?",
+    const [complaint] = await db.execute(
+      "SELECT * FROM complaints WHERE complaint_id = ?",
       [complaintId]
     );
 
@@ -176,6 +147,42 @@ exports.getComplaint = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Error fetching complaint",
+      error: err.message,
+    });
+  }
+};
+
+exports.getComplaintCount = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    const [totalComplaints] = await db.execute(
+      "SELECT COUNT(*) AS total FROM complaints WHERE Sid = ?",
+      [userId]
+    );
+
+    const [resolvedComplaints] = await db.execute(
+      "SELECT COUNT(*) AS resolved FROM complaints WHERE Sid = ? AND status = 'resolved'",
+      [userId]
+    );
+
+    if (totalComplaints[0].total === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No complaints found for this user",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      totalComplaints: totalComplaints[0].total,
+      resolvedComplaints: resolvedComplaints[0].resolved,
+    });
+  } catch (err) {
+    console.error("Error fetching complaint status:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error fetching complaint status",
       error: err.message,
     });
   }

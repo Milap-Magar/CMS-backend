@@ -6,6 +6,7 @@ const {
   deleteComplaint,
   updateComplaint,
   getComplaint,
+  getComplaintCount,
 } = require("../controller/admin.complain.controller");
 
 // Get all complaints for the logged-in user
@@ -20,4 +21,7 @@ router.put("/complaints/:id", checkAuth, updateComplaint);
 // Delete a specific complaint by ID
 router.delete("/complaints/:id", checkAuth, deleteComplaint);
 
+router.get("/complaints/count/:studentId", checkAuth, getComplaintCount);
+
 module.exports = router;
+

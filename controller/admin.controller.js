@@ -1,8 +1,7 @@
 const db = require("../config/database");
 const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-
 const dotenv = require("dotenv");
+const bcrypt = require("bcryptjs");
 dotenv.config();
 
 exports.login = async (req, res) => {
@@ -118,5 +117,36 @@ exports.total = async (req, res) => {
   } catch (error) {
     console.error("Database query error:", error);
     res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+exports.deleteStudent = async (req, res) => {
+  const studentId = req.params.id;
+
+  try {
+    const [student] = await db.execute("SELECT * FROM students WHERE Sid = ?", [
+      studentId,
+    ]);
+
+    if (student.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Student not found" });
+    }
+
+    await db.execute("DELETE FROM students WHERE Sid = ?", [studentId]);
+
+    const [results] = await db.execute("SELECT * FROM students");
+
+    return res.status(200).json({
+      success: true,
+      message: "Student deleted successfully",
+      totals: results,
+    });
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    return res
+      .status(500)
+      .json({ success: false, error: "Error deleting student" });
   }
 };

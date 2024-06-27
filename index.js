@@ -12,17 +12,20 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(
   express.urlencoded({
     extended: true,
   })
 );
 
-app.use("/admin", require("./routes/admin.routes"));
+app.use("/admin", require("./routes/admin.routes")); 
 
-app.use("/user", require("./routes/user.routes"));
+app.use("/user", require("./routes/user.routes")); 
 
-app.use("/", require("./routes/complain.routes"));
+app.use("/", require("./routes/complain.routes")); 
+
+app.use("/student", require("./routes/student.routes"));
 
 app.use("/handle", require("./routes/admin.complain.routes"));
 

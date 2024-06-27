@@ -8,8 +8,6 @@ router.post("/login", login);
 
 router.post("/register", register);
 
-
-// get DATA routes
 router.get("/dashboard", verifyToken, dashboard);
 
 module.exports = router;
