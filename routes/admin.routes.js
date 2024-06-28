@@ -5,6 +5,7 @@ const {
   dashboard,
   total,
   deleteStudent,
+  getDetails,
 } = require("../controller/admin.controller");
 const verifyToken = require("../middleware/admin.middleware");
 
@@ -15,6 +16,8 @@ router.post("/login", login);
 router.post("/register", register);
 
 router.get("/dashboard", verifyToken, dashboard);
+
+router.get("/getDetails", verifyToken, getDetails);
 
 router.get("/total", verifyToken, total);
 

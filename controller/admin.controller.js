@@ -150,3 +150,29 @@ exports.deleteStudent = async (req, res) => {
       .json({ success: false, error: "Error deleting student" });
   }
 };
+
+exports.getDetails = async (req, res) => {
+  const email = req.email;
+  console.log("🚀 ~ app.get ~ email:", email);
+
+  try {
+    const [results] = await db.execute("SELECT * FROM admins WHERE email = ?", [
+      email,
+    ]);
+    // console.log("🚀 ~ app.get ~ [results]:", results);
+
+    if (results.length === 0) {
+      return res.status(404).json({ error: "Admin not found" });
+    }
+
+    const admin = results[0];
+
+    res.json({
+      success: true,
+      results: admin,
+    });
+  } catch (error) {
+    console.error("Database query error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
