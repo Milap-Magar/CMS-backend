@@ -39,12 +39,10 @@ exports.addComplains = async (req, res) => {
 };
 // Get all complaints for the logged-in user [READ]
 exports.getComplaints = async (req, res) => {
-  const email = req.user.email;
+  // const email = req.user.email;
 
   try {
-    const [rows] = await db.query("SELECT * FROM complaints WHERE email = ?", [
-      email,
-    ]);
+    const [rows] = await db.query("SELECT * FROM complaints");
 
     return res.status(200).json({
       success: true,

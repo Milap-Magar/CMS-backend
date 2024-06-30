@@ -10,7 +10,6 @@ exports.login = async (req, res) => {
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
-
   try {
     const [data] = await db.execute("SELECT * FROM admins WHERE email = ?", [
       email,
